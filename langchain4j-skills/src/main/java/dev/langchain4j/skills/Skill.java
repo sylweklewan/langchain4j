@@ -4,6 +4,7 @@ import dev.langchain4j.Experimental;
 import dev.langchain4j.service.tool.ToolProvider;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Represents a skill that can be used by an LLM.
@@ -42,6 +43,10 @@ public interface Skill {
     default List<SkillResource> resources() {
         return List.of();
     }
+
+    default Map<String, String> metadata() { return Map.of(); }
+
+    String metadataValue (String key);
 
     /**
      * Returns the optional list of tool providers associated with this skill.

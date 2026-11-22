@@ -14,6 +14,7 @@ import dev.langchain4j.service.tool.ToolService;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -30,6 +31,7 @@ public abstract class AbstractSkill implements Skill {
     private final List<AiServiceTool> mapTools;
     private final List<ToolProvider> toolProviders;
     private final List<ToolProvider> aggregatedToolProviders;
+    private final Map<String, String> metadata;
 
     protected AbstractSkill(BaseBuilder<?> builder) {
         this.name = ensureNotBlank(builder.name, "name");
@@ -41,6 +43,7 @@ public abstract class AbstractSkill implements Skill {
         this.mapTools = copy(builder.mapTools);
         this.toolProviders = copy(builder.toolProviders);
         this.aggregatedToolProviders = aggregate(this.annotatedTools, this.mapTools, this.toolProviders);
+        this.metadata = copy(builder.metadata);
     }
 
     private static List<ToolProvider> aggregate(
@@ -88,6 +91,15 @@ public abstract class AbstractSkill implements Skill {
     }
 
     @Override
+    public Map<String, String> metadata() {
+        return metadata;
+    }
+
+    public String metadataValue(String key) {
+        return metadata.getOrDefault(key, "");
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof AbstractSkill that)) return false;
@@ -97,12 +109,13 @@ public abstract class AbstractSkill implements Skill {
                 && Objects.equals(resources, that.resources)
                 && Objects.equals(annotatedTools, that.annotatedTools)
                 && Objects.equals(mapTools, that.mapTools)
-                && Objects.equals(toolProviders, that.toolProviders);
+                && Objects.equals(toolProviders, that.toolProviders)
+                && Objects.equals(metadata, that.metadata);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, description, content, resources, annotatedTools, mapTools, toolProviders);
+        return Objects.hash(name, description, content, resources, annotatedTools, mapTools, toolProviders, metadata);
     }
 
     @Override
@@ -113,6 +126,7 @@ public abstract class AbstractSkill implements Skill {
                 + ", content = " + content
                 + ", resources = " + resources
                 + ", toolProviders = " + aggregatedToolProviders
+                + ", metadata = " + metadata
                 + " }";
     }
 
@@ -136,6 +150,7 @@ public abstract class AbstractSkill implements Skill {
         private List<AiServiceTool> annotatedTools;
         private List<ToolProvider> toolProviders;
         private List<AiServiceTool> mapTools;
+        private Map<String, String> metadata;
 
         public B name(String name) {
             this.name = name;
@@ -185,6 +200,11 @@ public abstract class AbstractSkill implements Skill {
             return (B) this;
         }
 
+        public B metadata(Map<String, String> metadata) {
+            this.metadata = new LinkedHashMap<>(metadata);
+            return (B) this;
+        }
+
         /**
          * Populates this builder with the values from the given skill so the original tool state
          * (annotated tools, map tools, and user-provided tool providers) can be modified independently
@@ -201,6 +221,7 @@ public abstract class AbstractSkill implements Skill {
             this.annotatedTools = skill.annotatedTools.isEmpty() ? null : new ArrayList<>(skill.annotatedTools);
             this.mapTools = skill.mapTools.isEmpty() ? null : new ArrayList<>(skill.mapTools);
             this.toolProviders = skill.toolProviders.isEmpty() ? null : new ArrayList<>(skill.toolProviders);
+            this.metadata = skill.metadata.isEmpty() ? null : new LinkedHashMap<>(skill.metadata);
             return (B) this;
         }
     }
